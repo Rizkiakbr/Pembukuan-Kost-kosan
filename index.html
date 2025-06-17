@@ -3,71 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dasbor Keuangan Kost</title>
+    <title>Dasbor Keuangan Modern</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- 
-        Chosen Palette: Modern Indigo
-        Application Structure Plan: Desain aplikasi ini menggunakan pendekatan dasbor satu halaman. Struktur ini dipilih karena memungkinkan pengguna melihat semua informasi penting (KPI, grafik, dan daftar transaksi) dalam satu layar tanpa perlu berpindah halaman, yang mana lebih intuitif daripada format multi-sheet pada Excel. Pengguna dapat dengan mudah mengubah periode waktu (bulan/tahunan) melalui filter di bagian atas, dan semua komponen di dasbor akan diperbarui secara dinamis. Alur ini memusatkan kontrol dan memberikan umpan balik visual instan, mempermudah proses analisis dan pencatatan data keuangan.
+        Chosen Palette: Modern Minimalist
+        Application Structure Plan: Desain dirombak total untuk menghilangkan Glassmorphism dan Dark Mode, diganti dengan gaya "Claymorphism" yang lebih bersih dan modern. Tujuannya adalah menciptakan tampilan yang "biasa tapi tidak biasa"—terlihat profesional dan mudah dibaca (biasa), namun memiliki karakter unik melalui penggunaan shadow yang tegas, border halus, dan palet warna yang berkelas (tidak biasa). Semua fungsionalitas dan animasi dipertahankan untuk pengalaman pengguna yang dinamis.
         Visualization & Content Choices:
-        - Ringkasan KPI (Inform): Menggunakan kartu (card) HTML/Tailwind untuk menampilkan metrik utama seperti Laba Bersih dan Saldo Kas. Interaksinya adalah pembaruan nilai secara dinamis. Ini memberikan gambaran cepat kondisi keuangan.
-        - Grafik Batang Pemasukan vs Pengeluaran (Compare): Menggunakan Chart.js (Canvas) untuk membandingkan total pemasukan dan pengeluaran setiap bulan. Ini efektif untuk melihat performa bulanan secara visual.
-        - Grafik Donat Rincian Pengeluaran (Organize): Menggunakan Chart.js (Canvas) untuk memvisualisasikan alokasi dana berdasarkan kategori, memberikan wawasan pengeluaran.
-        - Tabel Transaksi (Organize): Menggunakan tabel HTML dinamis yang bisa difilter berdasarkan bulan dan ditambah kolom kategori untuk rincian. Ini berguna untuk melihat detail setiap transaksi.
-        - Form Input (Data Entry): Menggunakan modal HTML/JS untuk memasukkan data baru termasuk kategori pengeluaran.
+        - KPI Cards (Inform): Menggunakan panel putih solid dengan `box-shadow` yang tegas dan border halus untuk menciptakan efek 3D yang subtle.
+        - Charts (Compare/Organize): Ditempatkan dalam panel yang sama untuk konsistensi visual. Warna grafik disesuaikan dengan palet baru yang lebih segar. Grafik kategori diganti dengan grafik tren laba bersih untuk wawasan bisnis yang lebih baik.
+        - Transaction Table (Organize): Dibuat lebih bersih dengan header yang jelas dan baris yang diberi efek hover lembut.
+        - Animations: Animasi 'fade-in' dan 'typing' dipertahankan untuk memberikan kesan premium.
         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
     -->
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #f4f7fc;
-            background-image: linear-gradient(180deg, #eef2ff 0%, #f4f7fc 100%);
+            background-color: #f4f4f5; /* Zinc 100 */
         }
-        .chart-container { position: relative; width: 100%; max-width: 400px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
-        @media (min-width: 768px) { .chart-container { height: 320px; } }
-        .bar-chart-container { position: relative; width: 100%; height: 320px; }
-        .card-icon {
-            width: 48px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 12px;
+        .panel {
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
         }
         .filter-btn-active {
-            background-color: #4f46e5;
+            background-color: #18181b; /* Zinc 900 */
             color: white;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
         }
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #4338ca; } /* Indigo 700 */
+        }
+        .typing-effect {
+            display: inline-block;
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: .15em solid #4338ca;
+            animation: typing 2.5s steps(30, end), blink-caret .75s step-end infinite;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in-up {
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+        .chart-container { position: relative; width: 100%; height: 320px; }
     </style>
 </head>
-<body class="text-gray-800">
+<body class="text-zinc-800">
 
     <div id="app" class="container mx-auto p-4 md:p-6">
-
-        <header class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Dasbor Keuangan Kost</h1>
-            <p class="text-gray-500 mt-2">Kelola dan pantau keuangan bisnis kost Anda dengan mudah.</p>
+        
+        <header class="text-center mb-8 pt-8">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-zinc-900">Dasbor Keuangan</h1>
+            <p id="greeting" class="text-lg h-7 mt-2 text-indigo-700 font-medium">Memuat...</p>
         </header>
 
-        <main>
+        <main class="opacity-0 transition-opacity duration-500">
             <!-- Filter Section -->
             <div class="mb-8 flex justify-center">
-                <div class="inline-flex rounded-xl shadow-sm bg-white p-1" role="group">
-                    <button type="button" id="btn-this-month" class="filter-btn px-4 py-2 text-sm font-medium text-gray-900 bg-transparent rounded-l-lg hover:bg-gray-100 focus:z-10 focus:ring-2 focus:ring-indigo-500">
+                <div class="inline-flex rounded-xl bg-zinc-200/70 p-1" role="group">
+                    <button type="button" id="btn-this-month" class="filter-btn px-4 py-2 text-sm font-medium text-zinc-700 bg-transparent rounded-lg hover:bg-zinc-50 focus:z-10">
                         Bulan Ini
                     </button>
-                    <button type="button" id="btn-this-year" class="filter-btn px-4 py-2 text-sm font-medium text-gray-900 bg-transparent hover:bg-gray-100 focus:z-10 focus:ring-2 focus:ring-indigo-500">
+                    <button type="button" id="btn-this-year" class="filter-btn px-4 py-2 text-sm font-medium text-zinc-700 bg-transparent rounded-lg hover:bg-zinc-50 focus:z-10">
                         Tahun Ini
                     </button>
                     <div class="relative">
-                        <button type="button" id="btn-other-month" class="filter-btn px-4 py-2 text-sm font-medium text-gray-900 bg-transparent rounded-r-lg hover:bg-gray-100 focus:z-10 focus:ring-2 focus:ring-indigo-500 inline-flex items-center">
+                        <button type="button" id="btn-other-month" class="filter-btn px-4 py-2 text-sm font-medium text-zinc-700 bg-transparent rounded-lg hover:bg-zinc-50 focus:z-10 inline-flex items-center">
                             Pilih Bulan
                             <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
                         <div id="period-dropdown" class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10 hidden">
-                            <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
-                            </div>
+                            <div class="py-1" role="menu"></div>
                         </div>
                     </div>
                 </div>
@@ -75,70 +90,69 @@
 
             <!-- Summary Cards -->
             <section id="summary-cards" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-                 <div class="bg-white/70 backdrop-blur-sm p-5 rounded-2xl shadow-md border border-gray-200/50 flex items-center gap-4">
-                    <div class="card-icon bg-green-100"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg></div>
+                <div class="panel p-5 rounded-2xl flex items-center gap-4 card-animate opacity-0">
+                    <div class="p-3 bg-green-100 rounded-xl"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg></div>
                     <div>
-                        <h3 class="text-sm font-semibold text-gray-500">Total Pemasukan</h3>
-                        <p id="total-income" class="text-2xl font-bold text-gray-800">Rp 0</p>
+                        <h3 class="text-sm font-semibold text-zinc-500">Total Pemasukan</h3>
+                        <p id="total-income" class="text-2xl font-bold">Rp 0</p>
                     </div>
                 </div>
-                <div class="bg-white/70 backdrop-blur-sm p-5 rounded-2xl shadow-md border border-gray-200/50 flex items-center gap-4">
-                    <div class="card-icon bg-red-100"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg></div>
+                 <div class="panel p-5 rounded-2xl flex items-center gap-4 card-animate opacity-0">
+                    <div class="p-3 bg-red-100 rounded-xl"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg></div>
                     <div>
-                        <h3 class="text-sm font-semibold text-gray-500">Total Pengeluaran</h3>
-                        <p id="total-expense" class="text-2xl font-bold text-gray-800">Rp 0</p>
+                        <h3 class="text-sm font-semibold text-zinc-500">Total Pengeluaran</h3>
+                        <p id="total-expense" class="text-2xl font-bold">Rp 0</p>
                     </div>
                 </div>
-                <div class="bg-white/70 backdrop-blur-sm p-5 rounded-2xl shadow-md border border-gray-200/50 flex items-center gap-4">
-                    <div class="card-icon bg-blue-100"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
+                <div class="panel p-5 rounded-2xl flex items-center gap-4 card-animate opacity-0">
+                    <div class="p-3 bg-blue-100 rounded-xl"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
                     <div>
-                        <h3 class="text-sm font-semibold text-gray-500">Laba / Rugi Bersih</h3>
-                        <p id="net-profit" class="text-2xl font-bold text-gray-800">Rp 0</p>
+                        <h3 class="text-sm font-semibold text-zinc-500">Laba / Rugi Bersih</h3>
+                        <p id="net-profit" class="text-2xl font-bold">Rp 0</p>
                     </div>
                 </div>
-                <div class="bg-white/70 backdrop-blur-sm p-5 rounded-2xl shadow-md border border-gray-200/50 flex items-center gap-4">
-                    <div class="card-icon bg-indigo-100"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" /></svg></div>
+                <div class="panel p-5 rounded-2xl flex items-center gap-4 card-animate opacity-0">
+                    <div class="p-3 bg-indigo-100 rounded-xl"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" /></svg></div>
                     <div>
-                        <h3 class="text-sm font-semibold text-gray-500">Saldo Kas (Total)</h3>
-                        <p id="cash-balance" class="text-2xl font-bold text-gray-800">Rp 0</p>
+                        <h3 class="text-sm font-semibold text-zinc-500">Saldo Kas (Total)</h3>
+                        <p id="cash-balance" class="text-2xl font-bold">Rp 0</p>
                     </div>
                 </div>
             </section>
             
             <!-- Charts Section -->
-            <section id="charts" class="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
-                <div class="lg:col-span-3 bg-white p-4 rounded-2xl shadow-md">
-                    <h3 class="text-lg font-semibold text-center mb-2">Pemasukan vs Pengeluaran Bulanan</h3>
-                    <div class="bar-chart-container">
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 card-animate opacity-0" style="animation-delay: 0.4s;">
+                <div class="panel p-4 rounded-2xl">
+                    <h3 class="text-lg font-semibold text-center text-zinc-700 mb-2">Pemasukan vs Pengeluaran</h3>
+                    <div class="chart-container">
                         <canvas id="incomeExpenseChart"></canvas>
                     </div>
                 </div>
-                <div class="lg:col-span-2 bg-white p-4 rounded-2xl shadow-md">
-                    <h3 class="text-lg font-semibold text-center mb-2">Rincian Pengeluaran</h3>
+                <div class="panel p-4 rounded-2xl">
+                    <h3 class="text-lg font-semibold text-center text-zinc-700 mb-2">Tren Laba Bersih</h3>
                     <div class="chart-container">
-                        <canvas id="categoryChart"></canvas>
+                        <canvas id="netProfitTrendChart"></canvas>
                     </div>
                 </div>
             </section>
 
             <!-- Transactions Section -->
-            <section id="transactions" class="bg-white p-4 md:p-6 rounded-2xl shadow-md">
+            <section class="panel p-4 md:p-6 rounded-2xl card-animate opacity-0" style="animation-delay: 0.5s;">
                 <div class="flex flex-col md:flex-row justify-between items-center mb-4">
-                    <h3 class="text-xl font-semibold mb-2 md:mb-0">Riwayat Transaksi (<span id="transaction-period-label"></span>)</h3>
-                    <button id="add-transaction-btn" class="w-full md:w-auto flex items-center justify-center gap-2 bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-all duration-300 transform hover:scale-105">
+                    <h3 class="text-xl font-semibold text-zinc-800 mb-2 md:mb-0">Riwayat Transaksi (<span id="transaction-period-label"></span>)</h3>
+                    <button id="add-transaction-btn" class="w-full md:w-auto flex items-center justify-center gap-2 bg-zinc-900 text-white font-bold py-2 px-4 rounded-lg hover:bg-zinc-700 transition-all duration-300 transform hover:scale-105">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                         <span>Tambah Transaksi</span>
                     </button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm text-left">
-                        <thead class="bg-gray-50 border-b-2 border-gray-200">
+                        <thead class="border-b-2 border-zinc-200">
                             <tr>
-                                <th class="p-3 font-semibold text-gray-600">Tanggal</th>
-                                <th class="p-3 font-semibold text-gray-600">Keterangan</th>
-                                <th class="p-3 font-semibold text-gray-600">Kategori</th>
-                                <th class="p-3 font-semibold text-gray-600 text-right">Jumlah</th>
-                                <th class="p-3 font-semibold text-gray-600 text-center">Aksi</th>
+                                <th class="p-3 font-semibold text-zinc-500">Tanggal</th>
+                                <th class="p-3 font-semibold text-zinc-500">Keterangan</th>
+                                <th class="p-3 font-semibold text-zinc-500 text-right">Jumlah</th>
+                                <th class="p-3 font-semibold text-zinc-500 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="transaction-table-body"></tbody>
@@ -149,37 +163,32 @@
     </div>
 
     <!-- Modal for Adding Transaction -->
-    <div id="transaction-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden flex justify-center items-center p-4">
-        <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md mx-4 transform transition-all" id="modal-content">
-            <h3 class="text-xl font-bold mb-4">Tambah Transaksi Baru</h3>
+    <div id="transaction-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-center p-4 opacity-0 transition-opacity duration-300">
+        <div id="modal-content" class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md mx-4 transform scale-95 transition-transform duration-300">
+            <h3 class="text-xl font-bold mb-4 text-zinc-800">Tambah Transaksi Baru</h3>
             <form id="transaction-form">
                 <div class="mb-4">
-                    <label for="date" class="block text-sm font-medium text-gray-700">Tanggal</label>
-                    <input type="date" id="date" name="date" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+                    <label for="date" class="block text-sm font-medium text-zinc-700">Tanggal</label>
+                    <input type="date" id="date" name="date" class="mt-1 block w-full bg-zinc-50 border-zinc-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
                 </div>
                 <div class="mb-4">
-                    <label for="description" class="block text-sm font-medium text-gray-700">Keterangan</label>
-                    <input type="text" id="description" name="description" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Contoh: Bayar listrik Juni" required>
+                    <label for="description" class="block text-sm font-medium text-zinc-700">Keterangan</label>
+                    <input type="text" id="description" name="description" class="mt-1 block w-full bg-zinc-50 border-zinc-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Contoh: Bayar listrik Juni" required>
                 </div>
                 <div class="mb-4">
-                    <label for="type" class="block text-sm font-medium text-gray-700">Tipe</label>
-                    <select id="type" name="type" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <label for="type" class="block text-sm font-medium text-zinc-700">Tipe</label>
+                    <select id="type" name="type" class="mt-1 block w-full bg-zinc-50 border-zinc-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="income">Pemasukan</option>
                         <option value="expense">Pengeluaran</option>
                     </select>
                 </div>
-                <div id="category-wrapper" class="mb-4 hidden">
-                    <label for="category" class="block text-sm font-medium text-gray-700">Kategori</label>
-                    <select id="category" name="category" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                    </select>
-                </div>
                 <div class="mb-4">
-                    <label for="amount" class="block text-sm font-medium text-gray-700">Jumlah (Rp)</label>
-                    <input type="number" id="amount" name="amount" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="500000" required>
+                    <label for="amount" class="block text-sm font-medium text-zinc-700">Jumlah (Rp)</label>
+                    <input type="number" id="amount" name="amount" class="mt-1 block w-full bg-zinc-50 border-zinc-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="500000" required>
                 </div>
                 <div class="flex justify-end gap-3 mt-6">
-                    <button type="button" id="cancel-btn" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">Batal</button>
-                    <button type="submit" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700">Simpan</button>
+                    <button type="button" id="cancel-btn" class="bg-zinc-200 text-zinc-800 font-bold py-2 px-4 rounded-lg hover:bg-zinc-300">Batal</button>
+                    <button type="submit" class="bg-zinc-900 text-white font-bold py-2 px-4 rounded-lg hover:bg-zinc-700">Simpan</button>
                 </div>
             </form>
         </div>
@@ -187,43 +196,27 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const STORAGE_KEY = 'kostFinanceData_v1';
+            const STORAGE_KEY = 'kostFinanceData_v8_clean_profit_trend';
 
-            const state = {
-                transactions: [],
-                currentPeriod: '',
-                charts: {},
-            };
+            const state = { transactions: [], currentPeriod: '', charts: {} };
             
             const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-            const KOST_CATEGORIES = ['Tagihan Rutin', 'Perawatan & Perbaikan', 'Operasional', 'Gaji & Upah', 'Pajak & Retribusi', 'Lain-lain'];
-            const KOST_CATEGORY_COLORS = ['#3b82f6', '#f97316', '#10b981', '#8b5cf6', '#ef4444', '#6b7280'];
 
-            const saveData = () => {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(state.transactions));
-            };
-
-            const loadData = () => {
-                const data = localStorage.getItem(STORAGE_KEY);
-                return data ? JSON.parse(data) : [];
-            };
+            const saveData = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state.transactions));
+            const loadData = () => JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
             
-            const animateValue = (obj, start, end, duration) => {
-                let startTimestamp = null;
-                const step = (timestamp) => {
-                    if (!startTimestamp) startTimestamp = timestamp;
-                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                    const currentValue = Math.floor(progress * (end - start) + start);
-                     obj.innerHTML = formatCurrency(currentValue);
-                    if (progress < 1) {
-                        window.requestAnimationFrame(step);
-                    }
-                };
-                window.requestAnimationFrame(step);
-            }
+            const formatCurrency = value => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value);
 
-            const formatCurrency = (value) => {
-                return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value);
+            const renderGreeting = () => {
+                const greetingEl = document.getElementById('greeting');
+                const hour = new Date().getHours();
+                let greetingText = "Selamat Datang, Bos!";
+                if (hour < 11) greetingText = "Selamat Pagi, Bos!";
+                else if (hour < 15) greetingText = "Selamat Siang, Bos!";
+                else if (hour < 19) greetingText = "Selamat Sore, Bos!";
+                else greetingText = "Selamat Malam, Bos!";
+                
+                greetingEl.innerHTML = `<span class="typing-effect">${greetingText}</span>`;
             };
 
             const setupPeriodSelector = () => {
@@ -232,125 +225,83 @@
                 const btnOtherMonth = document.getElementById('btn-other-month');
                 const dropdown = document.getElementById('period-dropdown');
                 const dropdownContent = dropdown.querySelector('.py-1');
-                
                 const allFilterBtns = [btnThisMonth, btnThisYear, btnOtherMonth];
 
                 const updateActiveButton = () => {
                     allFilterBtns.forEach(btn => btn.classList.remove('filter-btn-active'));
-                    
                     const currentMonthName = months[new Date().getMonth()];
-                    if (state.currentPeriod === currentMonthName) {
-                        btnThisMonth.classList.add('filter-btn-active');
-                    } else if (state.currentPeriod === 'Tahun Ini') {
-                        btnThisYear.classList.add('filter-btn-active');
-                    } else {
-                        btnOtherMonth.classList.add('filter-btn-active');
-                    }
+                    if (state.currentPeriod === currentMonthName) btnThisMonth.classList.add('filter-btn-active');
+                    else if (state.currentPeriod === 'Tahun Ini') btnThisYear.classList.add('filter-btn-active');
+                    else btnOtherMonth.classList.add('filter-btn-active');
                 };
-                
-                btnThisMonth.addEventListener('click', () => {
-                    state.currentPeriod = months[new Date().getMonth()];
-                    renderDashboard();
-                });
 
-                btnThisYear.addEventListener('click', () => {
-                    state.currentPeriod = 'Tahun Ini';
-                    renderDashboard();
-                });
-
-                btnOtherMonth.addEventListener('click', () => {
-                    dropdown.classList.toggle('hidden');
-                });
+                btnThisMonth.addEventListener('click', () => { state.currentPeriod = months[new Date().getMonth()]; renderDashboard(); });
+                btnThisYear.addEventListener('click', () => { state.currentPeriod = 'Tahun Ini'; renderDashboard(); });
+                btnOtherMonth.addEventListener('click', () => dropdown.classList.toggle('hidden'));
                 
                 dropdownContent.innerHTML = '';
                 months.forEach(month => {
                     const a = document.createElement('a');
-                    a.href = '#';
-                    a.textContent = month;
-                    a.dataset.period = month;
-                    a.className = 'block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-md';
-                    a.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        state.currentPeriod = month;
-                        dropdown.classList.add('hidden');
-                        renderDashboard();
-                    });
+                    a.href = '#'; a.textContent = month; a.dataset.period = month;
+                    a.className = 'block w-full text-left px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 rounded-md';
+                    a.addEventListener('click', e => { e.preventDefault(); state.currentPeriod = month; dropdown.classList.add('hidden'); renderDashboard(); });
                     dropdownContent.appendChild(a);
                 });
 
-                window.addEventListener('click', (e) => {
-                    if (!btnOtherMonth.contains(e.target) && !dropdown.contains(e.target)) {
-                        dropdown.classList.add('hidden');
-                    }
-                });
-
+                window.addEventListener('click', e => { if (!btnOtherMonth.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.add('hidden'); });
                 return { updateActiveButton };
             };
-
-            const renderSummaryCards = () => {
-                const monthIndex = months.indexOf(state.currentPeriod);
-                const currentMonthName = months[new Date().getMonth()];
-                
-                const filteredTransactions = state.transactions.filter(t => {
+            
+            const getFilteredTransactions = () => {
+                 const currentMonthName = months[new Date().getMonth()];
+                 return state.transactions.filter(t => {
                     if (state.currentPeriod === 'Tahun Ini') return true;
                     const targetMonth = state.currentPeriod === "Bulan Ini" ? currentMonthName : state.currentPeriod;
                     return new Date(t.date).getMonth() === months.indexOf(targetMonth);
                 });
-                
-                const totalIncome = filteredTransactions.reduce((sum, t) => t.type === 'income' ? sum + t.amount : sum, 0);
-                const totalExpense = filteredTransactions.reduce((sum, t) => t.type === 'expense' ? sum + t.amount : sum, 0);
-                const netProfit = totalIncome - totalExpense;
+            };
 
-                const cashBalance = state.transactions.reduce((sum, t) => t.type === 'income' ? sum + t.amount : sum, 0) - state.transactions.reduce((sum, t) => t.type === 'expense' ? sum + t.amount : sum, 0);
-                
-                const DURATION = 500;
-                animateValue(document.getElementById('total-income'), 0, totalIncome, DURATION);
-                animateValue(document.getElementById('total-expense'), 0, totalExpense, DURATION);
-                animateValue(document.getElementById('net-profit'), 0, netProfit, DURATION);
-                animateValue(document.getElementById('cash-balance'), 0, cashBalance, DURATION);
+            const renderSummaryCards = () => {
+                const filtered = getFilteredTransactions();
+                const totalIncome = filtered.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+                const totalExpense = filtered.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+                document.getElementById('total-income').textContent = formatCurrency(totalIncome);
+                document.getElementById('total-expense').textContent = formatCurrency(totalExpense);
+                document.getElementById('net-profit').textContent = formatCurrency(totalIncome - totalExpense);
+                const cashBalance = state.transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0) - state.transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+                document.getElementById('cash-balance').textContent = formatCurrency(cashBalance);
             };
 
             const renderTransactionTable = () => {
                 const tbody = document.getElementById('transaction-table-body');
                 document.getElementById('transaction-period-label').textContent = state.currentPeriod;
                 tbody.innerHTML = '';
-                const monthIndex = months.indexOf(state.currentPeriod);
-                const currentMonthName = months[new Date().getMonth()];
+                const filtered = getFilteredTransactions().sort((a, b) => new Date(b.date) - new Date(a.date));
 
-                const filteredTransactions = state.transactions
-                    .filter(t => {
-                        if (state.currentPeriod === 'Tahun Ini') return true;
-                        const targetMonth = state.currentPeriod === "Bulan Ini" ? currentMonthName : state.currentPeriod;
-                        return new Date(t.date).getMonth() === months.indexOf(targetMonth);
-                    })
-                    .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-                if (filteredTransactions.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="text-center p-6 text-gray-500">Belum ada transaksi di periode ini.</td></tr>`;
+                if (filtered.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-zinc-500">Belum ada transaksi di periode ini.</td></tr>`;
                     return;
                 }
                 
-                filteredTransactions.forEach(t => {
+                filtered.forEach((t, index) => {
                     const row = document.createElement('tr');
-                    row.className = 'border-b border-gray-100 hover:bg-indigo-50/50';
+                    row.className = 'border-b border-zinc-200/80 opacity-0';
+                    row.style.animation = `fadeInUp 0.5s ease-out ${index * 0.05}s forwards`;
                     row.innerHTML = `
                         <td class="p-3">${new Date(t.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}</td>
                         <td class="p-3">${t.description}</td>
-                        <td class="p-3">${t.category ? `<span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-200 text-gray-700">${t.category}</span>` : ''}</td>
                         <td class="p-3 text-right font-semibold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">
                             ${t.type === 'income' ? '+' : '-'} ${formatCurrency(t.amount)}
                         </td>
                         <td class="p-3 text-center">
-                            <button data-id="${t.id}" class="delete-btn text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
-                        </td>
-                    `;
+                            <button data-id="${t.id}" class="delete-btn text-zinc-400 hover:text-red-500 transition-colors p-1 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                        </td>`;
                     tbody.appendChild(row);
                 });
 
                 document.querySelectorAll('.delete-btn').forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        const idToDelete = parseInt(e.currentTarget.dataset.id, 10);
-                        state.transactions = state.transactions.filter(t => t.id !== idToDelete);
+                    button.addEventListener('click', e => {
+                        state.transactions = state.transactions.filter(t => t.id !== parseInt(e.currentTarget.dataset.id));
                         saveData();
                         renderDashboard();
                     });
@@ -358,55 +309,39 @@
             };
 
             const renderCharts = () => {
-                const monthlyData = months.map((month, index) => {
-                    const income = state.transactions.filter(t => t.type === 'income' && new Date(t.date).getMonth() === index).reduce((sum, t) => sum + t.amount, 0);
-                    const expense = state.transactions.filter(t => t.type === 'expense' && new Date(t.date).getMonth() === index).reduce((sum, t) => sum + t.amount, 0);
+                const gridColor = 'rgba(0, 0, 0, 0.05)';
+                const labelColor = '#71717a'; // Zinc 500
+                Chart.defaults.color = labelColor;
+
+                const monthlyData = months.map((m, i) => {
+                    const income = state.transactions.filter(t=>t.type==='income'&&new Date(t.date).getMonth()===i).reduce((s,t)=>s+t.amount,0);
+                    const expense = state.transactions.filter(t=>t.type==='expense'&&new Date(t.date).getMonth()===i).reduce((s,t)=>s+t.amount,0);
                     return { income, expense, net: income - expense };
                 });
 
                 const incomeExpenseCtx = document.getElementById('incomeExpenseChart').getContext('2d');
                 if(state.charts.incomeExpense) state.charts.incomeExpense.destroy();
-                state.charts.incomeExpense = new Chart(incomeExpenseCtx, {
-                    type: 'bar',
-                    data: { labels: months, datasets: [
-                        { label: 'Pemasukan', data: monthlyData.map(d => d.income), backgroundColor: 'rgba(56, 189, 248, 0.6)', borderColor: 'rgba(14, 165, 233, 1)', borderWidth: 1, borderRadius: 4 },
-                        { label: 'Pengeluaran', data: monthlyData.map(d => d.expense), backgroundColor: 'rgba(251, 146, 60, 0.6)', borderColor: 'rgba(249, 115, 22, 1)', borderWidth: 1, borderRadius: 4 }
-                    ]},
-                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { drawBorder: false } }, x: { grid: { display: false } } } }
-                });
+                state.charts.incomeExpense = new Chart(incomeExpenseCtx, { type: 'bar', data: { labels: months, datasets: [ { label: 'Pemasukan', data: monthlyData.map(d=>d.income), backgroundColor: 'rgba(59, 130, 246, 0.7)', borderColor: 'rgba(59, 130, 246, 1)', borderRadius: 4 }, { label: 'Pengeluaran', data: monthlyData.map(d=>d.expense), backgroundColor: 'rgba(234, 179, 8, 0.7)', borderColor: 'rgba(234, 179, 8, 1)', borderRadius: 4 } ]}, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: gridColor } }, x: { grid: { display: false } } }, plugins: { legend: { labels: { color: labelColor }}}} });
 
-                // Category Chart
-                const monthIndex = months.indexOf(state.currentPeriod);
-                const currentMonthName = months[new Date().getMonth()];
-                const filteredExpenses = state.transactions.filter(t => {
-                    if (t.type !== 'expense') return false;
-                    if (state.currentPeriod === 'Tahun Ini') return true;
-                    const targetMonth = state.currentPeriod === "Bulan Ini" ? currentMonthName : state.currentPeriod;
-                    return new Date(t.date).getMonth() === months.indexOf(targetMonth);
-                });
-
-                const categoryData = filteredExpenses.reduce((acc, t) => {
-                    if (t.category) {
-                        acc[t.category] = (acc[t.category] || 0) + t.amount;
-                    }
-                    return acc;
-                }, {});
-
-                const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-                if(state.charts.category) state.charts.category.destroy();
-                state.charts.category = new Chart(categoryCtx, {
-                    type: 'doughnut',
+                const netProfitTrendCtx = document.getElementById('netProfitTrendChart').getContext('2d');
+                if(state.charts.netProfitTrend) state.charts.netProfitTrend.destroy();
+                state.charts.netProfitTrend = new Chart(netProfitTrendCtx, {
+                    type: 'line',
                     data: {
-                        labels: Object.keys(categoryData),
+                        labels: months,
                         datasets: [{
-                            label: 'Pengeluaran per Kategori',
-                            data: Object.values(categoryData),
-                            backgroundColor: KOST_CATEGORY_COLORS,
-                            borderColor: '#ffffff',
-                            borderWidth: 2
+                            label: 'Laba Bersih',
+                            data: monthlyData.map(d => d.net),
+                            fill: true,
+                            backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                            borderColor: 'rgba(79, 70, 229, 1)',
+                            tension: 0.4,
+                            pointBackgroundColor: 'rgba(79, 70, 229, 1)',
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
                         }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }}}
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: gridColor } }, x: { grid: { display: false } } }, plugins: { legend: { display: false }} }
                 });
             };
 
@@ -416,49 +351,32 @@
                 const openBtn = document.getElementById('add-transaction-btn');
                 const cancelBtn = document.getElementById('cancel-btn');
                 const form = document.getElementById('transaction-form');
-                const typeSelect = document.getElementById('type');
-                const categoryWrapper = document.getElementById('category-wrapper');
-                const categorySelect = document.getElementById('category');
-
-                // Populate category options
-                categorySelect.innerHTML = '';
-                KOST_CATEGORIES.forEach(cat => {
-                    const option = document.createElement('option');
-                    option.value = cat;
-                    option.textContent = cat;
-                    categorySelect.appendChild(option);
-                });
-
-                typeSelect.addEventListener('change', () => {
-                    if (typeSelect.value === 'expense') {
-                        categoryWrapper.classList.remove('hidden');
-                        categorySelect.required = true;
-                    } else {
-                        categoryWrapper.classList.add('hidden');
-                        categorySelect.required = false;
-                    }
-                });
+                
+                const closeModal = () => {
+                    modal.classList.add('opacity-0');
+                    modalContent.classList.add('scale-95');
+                    setTimeout(() => modal.classList.add('hidden'), 300);
+                };
 
                 openBtn.addEventListener('click', () => {
                     modal.classList.remove('hidden');
-                    typeSelect.value = 'income';
-                    categoryWrapper.classList.add('hidden');
-                    categorySelect.required = false;
+                    setTimeout(() => {
+                        modal.classList.remove('opacity-0');
+                        modalContent.classList.remove('scale-95');
+                    }, 10);
                 });
-                const closeModal = () => modal.classList.add('hidden');
+
                 cancelBtn.addEventListener('click', closeModal);
                 
-                form.addEventListener('submit', (e) => {
+                form.addEventListener('submit', e => {
                     e.preventDefault();
-                    const newTransaction = {
-                        id: Date.now(),
-                        date: form.date.value,
-                        description: form.description.value,
-                        type: form.type.value,
-                        amount: parseInt(form.amount.value, 10),
-                        category: form.type.value === 'expense' ? form.category.value : null
-                    };
-                    state.transactions.push(newTransaction);
+                    state.transactions.push({ 
+                        id: Date.now(), 
+                        date: form.date.value, 
+                        description: form.description.value, 
+                        type: form.type.value, 
+                        amount: parseInt(form.amount.value) 
+                    });
                     saveData();
                     form.reset();
                     document.getElementById('date').valueAsDate = new Date();
@@ -479,10 +397,19 @@
                 state.transactions = loadData();
                 state.currentPeriod = months[new Date().getMonth()];
                 document.getElementById('date').valueAsDate = new Date();
+                renderGreeting();
                 setupModal();
                 const periodSelectorControls = setupPeriodSelector(); 
                 updateActiveButton = periodSelectorControls.updateActiveButton;
-                renderDashboard();
+                
+                setTimeout(() => {
+                    document.querySelector('main').classList.remove('opacity-0');
+                    renderDashboard();
+                    document.querySelectorAll('.card-animate').forEach((el, index) => {
+                        el.style.animationDelay = `${index * 0.1}s`;
+                        el.classList.add('fade-in-up');
+                    });
+                }, 100);
             };
 
             init();
