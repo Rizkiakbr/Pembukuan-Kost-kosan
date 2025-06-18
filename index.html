@@ -14,6 +14,7 @@
         - KPI Cards (Inform): Menggunakan panel putih solid dengan `box-shadow` yang tegas dan border halus untuk menciptakan efek 3D yang subtle.
         - Charts (Compare/Organize): Ditempatkan dalam panel yang sama untuk konsistensi visual. Warna grafik disesuaikan dengan palet baru yang lebih segar. Grafik kategori diganti dengan grafik tren laba bersih untuk wawasan bisnis yang lebih baik.
         - Transaction Table (Organize): Dibuat lebih bersih dengan header yang jelas dan baris yang diberi efek hover lembut.
+        - Confirmation Modal (Interaction): Modal konfirmasi kustom ditambahkan sebelum menghapus data untuk mencegah kesalahan pengguna.
         - Animations: Animasi 'fade-in' dan 'typing' dipertahankan untuk memberikan kesan premium.
         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
     -->
@@ -162,7 +163,7 @@
         </main>
     </div>
 
-    <!-- Modal for Adding Transaction -->
+    <!-- Add Transaction Modal -->
     <div id="transaction-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-center p-4 opacity-0 transition-opacity duration-300">
         <div id="modal-content" class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md mx-4 transform scale-95 transition-transform duration-300">
             <h3 class="text-xl font-bold mb-4 text-zinc-800">Tambah Transaksi Baru</h3>
@@ -193,12 +194,29 @@
             </form>
         </div>
     </div>
+    
+    <!-- Confirmation Delete Modal -->
+    <div id="confirmation-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-center p-4 opacity-0 transition-opacity duration-300">
+        <div id="confirmation-modal-content" class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-sm mx-4 transform scale-95 transition-transform duration-300 text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium mt-4 text-zinc-800">Konfirmasi Penghapusan</h3>
+            <p class="text-sm text-zinc-500 mt-2">Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan.</p>
+            <div class="flex justify-center gap-4 mt-6">
+                <button type="button" id="cancel-delete-btn" class="bg-zinc-200 text-zinc-800 font-bold py-2 px-6 rounded-lg hover:bg-zinc-300">Batal</button>
+                <button type="button" id="confirm-delete-btn" class="bg-red-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-700">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const STORAGE_KEY = 'kostFinanceData_v8_clean_profit_trend';
+            const STORAGE_KEY = 'kostFinanceData_v9_confirm';
 
-            const state = { transactions: [], currentPeriod: '', charts: {} };
+            const state = { transactions: [], currentPeriod: '', charts: {}, transactionIdToDelete: null };
             
             const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
@@ -301,9 +319,8 @@
 
                 document.querySelectorAll('.delete-btn').forEach(button => {
                     button.addEventListener('click', e => {
-                        state.transactions = state.transactions.filter(t => t.id !== parseInt(e.currentTarget.dataset.id));
-                        saveData();
-                        renderDashboard();
+                        state.transactionIdToDelete = parseInt(e.currentTarget.dataset.id, 10);
+                        openConfirmationModal();
                     });
                 });
             };
@@ -345,42 +362,52 @@
                 });
             };
 
-            const setupModal = () => {
-                const modal = document.getElementById('transaction-modal');
-                const modalContent = document.getElementById('modal-content');
+            const setupModals = () => {
+                const transactionModal = document.getElementById('transaction-modal');
+                const transactionModalContent = document.getElementById('modal-content');
                 const openBtn = document.getElementById('add-transaction-btn');
                 const cancelBtn = document.getElementById('cancel-btn');
                 const form = document.getElementById('transaction-form');
                 
-                const closeModal = () => {
-                    modal.classList.add('opacity-0');
-                    modalContent.classList.add('scale-95');
-                    setTimeout(() => modal.classList.add('hidden'), 300);
-                };
+                const confirmationModal = document.getElementById('confirmation-modal');
+                const confirmationModalContent = document.getElementById('confirmation-modal-content');
+                const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+                const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
 
-                openBtn.addEventListener('click', () => {
+                const openModal = (modal, content) => {
                     modal.classList.remove('hidden');
                     setTimeout(() => {
                         modal.classList.remove('opacity-0');
-                        modalContent.classList.remove('scale-95');
+                        content.classList.remove('scale-95');
                     }, 10);
-                });
+                };
 
-                cancelBtn.addEventListener('click', closeModal);
-                
+                const closeModal = (modal, content) => {
+                    modal.classList.add('opacity-0');
+                    content.classList.add('scale-95');
+                    setTimeout(() => modal.classList.add('hidden'), 300);
+                };
+
+                // Add Transaction Modal
+                openBtn.addEventListener('click', () => openModal(transactionModal, transactionModalContent));
+                cancelBtn.addEventListener('click', () => closeModal(transactionModal, transactionModalContent));
                 form.addEventListener('submit', e => {
                     e.preventDefault();
-                    state.transactions.push({ 
-                        id: Date.now(), 
-                        date: form.date.value, 
-                        description: form.description.value, 
-                        type: form.type.value, 
-                        amount: parseInt(form.amount.value) 
-                    });
+                    state.transactions.push({ id: Date.now(), date: form.date.value, description: form.description.value, type: form.type.value, amount: parseInt(form.amount.value) });
                     saveData();
                     form.reset();
                     document.getElementById('date').valueAsDate = new Date();
-                    closeModal();
+                    closeModal(transactionModal, transactionModalContent);
+                    renderDashboard();
+                });
+
+                // Confirmation Modal
+                window.openConfirmationModal = () => openModal(confirmationModal, confirmationModalContent);
+                cancelDeleteBtn.addEventListener('click', () => closeModal(confirmationModal, confirmationModalContent));
+                confirmDeleteBtn.addEventListener('click', () => {
+                    state.transactions = state.transactions.filter(t => t.id !== state.transactionIdToDelete);
+                    saveData();
+                    closeModal(confirmationModal, confirmationModalContent);
                     renderDashboard();
                 });
             };
@@ -398,7 +425,7 @@
                 state.currentPeriod = months[new Date().getMonth()];
                 document.getElementById('date').valueAsDate = new Date();
                 renderGreeting();
-                setupModal();
+                setupModals();
                 const periodSelectorControls = setupPeriodSelector(); 
                 updateActiveButton = periodSelectorControls.updateActiveButton;
                 
