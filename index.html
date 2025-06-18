@@ -11,8 +11,8 @@
         Chosen Palette: Modern Minimalist
         Application Structure Plan: Desain dirombak total untuk menghilangkan Glassmorphism dan Dark Mode, diganti dengan gaya "Claymorphism" yang lebih bersih dan modern. Tujuannya adalah menciptakan tampilan yang "biasa tapi tidak biasa"—terlihat profesional dan mudah dibaca (biasa), namun memiliki karakter unik melalui penggunaan shadow yang tegas, border halus, dan palet warna yang berkelas (tidak biasa). Semua fungsionalitas dan animasi dipertahankan untuk pengalaman pengguna yang dinamis.
         Visualization & Content Choices:
-        - KPI Cards (Inform): Didesain ulang untuk mode perbandingan, menampilkan data dari dua periode beserta persentase perubahan.
-        - Charts (Compare/Organize): Ditempatkan dalam panel yang sama untuk konsistensi visual. Grafik diperbarui untuk menampilkan dua dataset secara bersamaan saat mode perbandingan aktif.
+        - KPI Cards (Inform): Menggunakan panel putih solid dengan `box-shadow` yang tegas dan border halus untuk menciptakan efek 3D yang subtle.
+        - Charts (Compare/Organize): Ditempatkan dalam panel yang sama untuk konsistensi visual. Warna grafik disesuaikan dengan palet baru yang lebih segar. Grafik kategori diganti dengan grafik tren laba bersih untuk wawasan bisnis yang lebih baik.
         - Transaction Table (Organize): Dibuat lebih bersih. Ditambahkan fungsi Search dan Export CSV. Disembunyikan saat mode perbandingan untuk fokus pada analisis.
         - Confirmation Modal (Interaction): Modal konfirmasi kustom ditambahkan sebelum menghapus data untuk mencegah kesalahan pengguna.
         - Comparison Mode (Interaction): Fitur perbandingan ditambahkan dengan UI khusus untuk memilih dua periode, memberikan kemampuan analisis YoY dan MoM.
@@ -28,11 +28,6 @@
             background-color: #ffffff;
             border: 1px solid #e5e7eb;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
-        }
-        .filter-btn-active {
-            background-color: #18181b; /* Zinc 900 */
-            color: white;
-            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
         }
         .compare-btn-active {
             background-color: #4f46e5; /* Indigo 600 */
@@ -64,7 +59,7 @@
         <main class="opacity-0 transition-opacity duration-500">
             <!-- Filter Section -->
             <div class="mb-4 flex justify-center items-center gap-4">
-                <div id="standard-filters" class="flex gap-4">
+                <div id="standard-filters" class="flex flex-wrap justify-center gap-2 md:gap-4">
                     <div class="relative">
                         <select id="year-filter" class="w-32 appearance-none rounded-lg border border-zinc-300 bg-white py-2 pl-3 pr-8 text-sm font-medium text-zinc-700 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"></select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-zinc-700"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
@@ -74,7 +69,7 @@
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-zinc-700"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
                     </div>
                 </div>
-                <button id="toggle-compare-btn" class="flex items-center gap-2 rounded-lg border border-zinc-300 bg-white py-2 px-4 text-sm font-medium text-zinc-700 shadow-sm hover:bg-zinc-50">
+                <button id="toggle-compare-btn" class="flex-shrink-0 flex items-center gap-2 rounded-lg border border-zinc-300 bg-white py-2 px-4 text-sm font-medium text-zinc-700 shadow-sm hover:bg-zinc-50">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
                     <span>Bandingkan</span>
                 </button>
@@ -101,13 +96,13 @@
             </div>
 
             <!-- Summary Cards -->
-            <section id="summary-cards" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8"></section>
+            <section id="summary-cards" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8"></section>
             
             <!-- Charts Section -->
-            <section id="charts-section" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 card-animate opacity-0" style="animation-delay: 0.4s;"></section>
+            <section id="charts-section" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"></section>
 
             <!-- Transactions Section -->
-            <section id="transactions-section" class="panel p-4 md:p-6 rounded-2xl card-animate opacity-0" style="animation-delay: 0.5s;"></section>
+            <section id="transactions-section" class="panel p-4 md:p-6 rounded-2xl opacity-0"></section>
         </main>
     </div>
 
@@ -116,7 +111,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const STORAGE_KEY = 'kostFinanceData_v12_compare';
+            const STORAGE_KEY = 'kostFinanceData_v13_fixed';
             const state = { 
                 transactions: [], 
                 currentYear: new Date().getFullYear(),
@@ -134,6 +129,20 @@
             const saveData = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state.transactions));
             const loadData = () => JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
             const formatCurrency = value => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value);
+            
+            const openModal = (modal, content) => {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    content.classList.remove('scale-95');
+                }, 10);
+            };
+            
+            const closeModal = (modal, content) => {
+                modal.classList.add('opacity-0');
+                content.classList.add('scale-95');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            };
 
             const renderGreeting = () => {
                 const hour = new Date().getHours();
@@ -146,40 +155,32 @@
             };
 
             const setupFilters = () => {
-                // Standard Filters
                 const yearFilter = document.getElementById('year-filter');
                 const monthFilter = document.getElementById('month-filter');
-                // Comparison Filters
                 const yearFilterA = document.getElementById('year-filter-a');
                 const monthFilterA = document.getElementById('month-filter-a');
                 const yearFilterB = document.getElementById('year-filter-b');
                 const monthFilterB = document.getElementById('month-filter-b');
-
                 const years = [...new Set(state.transactions.map(t => new Date(t.date).getFullYear()))];
                 const currentY = new Date().getFullYear();
                 if (!years.includes(currentY)) years.push(currentY);
                 years.sort((a,b) => b - a);
                 const yearOptions = years.map(y => `<option value="${y}">${y}</option>`).join('');
-
-                [yearFilter, yearFilterA, yearFilterB].forEach(el => el.innerHTML = yearOptions);
-                yearFilter.value = state.currentYear;
-                yearFilterA.value = state.periodA.year;
-                yearFilterB.value = state.periodB.year;
-                
+                [yearFilter, yearFilterA, yearFilterB].forEach(el => { if(el) el.innerHTML = yearOptions; });
+                if(yearFilter) yearFilter.value = state.currentYear;
+                if(yearFilterA) yearFilterA.value = state.periodA.year;
+                if(yearFilterB) yearFilterB.value = state.periodB.year;
                 const monthOptions = ['Semua Bulan', ...ALL_MONTHS].map(m => `<option value="${m}">${m}</option>`).join('');
-                [monthFilter, monthFilterA, monthFilterB].forEach(el => el.innerHTML = monthOptions);
-                monthFilter.value = state.currentMonth;
-                monthFilterA.value = state.periodA.month;
-                monthFilterB.value = state.periodB.month;
-
-                // Event Listeners
-                yearFilter.addEventListener('change', e => { state.currentYear = parseInt(e.target.value); renderDashboard(); });
-                monthFilter.addEventListener('change', e => { state.currentMonth = e.target.value; renderDashboard(); });
-                
-                yearFilterA.addEventListener('change', e => { state.periodA.year = parseInt(e.target.value); renderDashboard(); });
-                monthFilterA.addEventListener('change', e => { state.periodA.month = e.target.value; renderDashboard(); });
-                yearFilterB.addEventListener('change', e => { state.periodB.year = parseInt(e.target.value); renderDashboard(); });
-                monthFilterB.addEventListener('change', e => { state.periodB.month = e.target.value; renderDashboard(); });
+                [monthFilter, monthFilterA, monthFilterB].forEach(el => { if(el) el.innerHTML = monthOptions; });
+                if(monthFilter) monthFilter.value = state.currentMonth;
+                if(monthFilterA) monthFilterA.value = state.periodA.month;
+                if(monthFilterB) monthFilterB.value = state.periodB.month;
+                if(yearFilter) yearFilter.addEventListener('change', e => { state.currentYear = parseInt(e.target.value); renderDashboard(); });
+                if(monthFilter) monthFilter.addEventListener('change', e => { state.currentMonth = e.target.value; renderDashboard(); });
+                if(yearFilterA) yearFilterA.addEventListener('change', e => { state.periodA.year = parseInt(e.target.value); renderDashboard(); });
+                if(monthFilterA) monthFilterA.addEventListener('change', e => { state.periodA.month = e.target.value; renderDashboard(); });
+                if(yearFilterB) yearFilterB.addEventListener('change', e => { state.periodB.year = parseInt(e.target.value); renderDashboard(); });
+                if(monthFilterB) monthFilterB.addEventListener('change', e => { state.periodB.month = e.target.value; renderDashboard(); });
             };
             
             const getTransactionsForPeriod = (period) => {
@@ -216,24 +217,24 @@
                     const metricsA = calculateMetrics(getTransactionsForPeriod(state.periodA));
                     const metricsB = calculateMetrics(getTransactionsForPeriod(state.periodB));
                     const metricsData = [
-                        { title: 'Pemasukan', a: metricsA.income, b: metricsB.income, icon: 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z' },
-                        { title: 'Pengeluaran', a: metricsA.expense, b: metricsB.expense, icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' },
-                        { title: 'Laba Bersih', a: metricsA.net, b: metricsB.net, icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
+                        { title: 'Pemasukan', a: metricsA.income, b: metricsB.income },
+                        { title: 'Pengeluaran', a: metricsA.expense, b: metricsB.expense },
+                        { title: 'Laba Bersih', a: metricsA.net, b: metricsB.net },
                     ];
                     metricsData.forEach(m => {
                         const diff = m.a - m.b;
                         const percent = m.b === 0 ? (m.a > 0 ? 100 : 0) : (diff / m.b) * 100;
                         const color = diff >= 0 ? 'text-green-600' : 'text-red-600';
                         const arrow = diff >= 0 ? '▲' : '▼';
-                        const card = `
+                        container.innerHTML += `
                             <div class="panel p-5 rounded-2xl opacity-0 card-animate">
                                 <h3 class="text-sm font-semibold text-zinc-500 mb-2">${m.title}</h3>
                                 <p class="text-xl font-bold">${formatCurrency(m.a)}</p>
                                 <p class="text-sm text-zinc-400">vs ${formatCurrency(m.b)}</p>
                                 <p class="text-lg font-bold mt-2 ${color}">${arrow} ${percent.toFixed(1)}%</p>
                             </div>`;
-                        container.innerHTML += card;
                     });
+                     container.innerHTML += `<div class="panel p-5 rounded-2xl opacity-0 card-animate"><h3 class="text-sm font-semibold text-zinc-500">Saldo Kas Total</h3><p class="text-2xl font-bold">${formatCurrency(cashBalance)}</p></div>`
                 } else {
                     const metrics = calculateMetrics(getFilteredTransactions(true));
                     const cardsData = [
@@ -257,18 +258,20 @@
 
             const renderTransactionTable = () => {
                 const container = document.getElementById('transactions-section');
-                container.innerHTML = '';
+                container.style.animationDelay = '0.5s';
+                container.classList.add('fade-in-up');
+
                 if (state.isComparing) {
                     container.innerHTML = `<p class="text-center text-zinc-500 p-8">Tabel transaksi disembunyikan saat mode perbandingan aktif untuk fokus pada analisis.</p>`;
                     return;
                 }
                  container.innerHTML = `
                     <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
-                        <div class="w-full md:w-1/3">
+                        <div class="w-full md:w-auto">
                             <h3 class="text-xl font-semibold text-zinc-800">Riwayat Transaksi</h3>
                             <p class="text-sm text-zinc-500">(<span id="transaction-period-label">${state.currentMonth}, ${state.currentYear}</span>)</p>
                         </div>
-                        <div class="w-full md:w-2/3 flex flex-col md:flex-row gap-2">
+                        <div class="w-full md:w-auto flex flex-col sm:flex-row gap-2">
                             <div class="relative flex-grow">
                                 <input type="search" id="search-input" placeholder="Cari keterangan..." class="w-full pl-10 pr-4 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><svg class="h-5 w-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></div>
@@ -295,9 +298,17 @@
                         </table>
                     </div>`;
                 
-                document.getElementById('search-input').addEventListener('input', (e) => { state.searchTerm = e.target.value; renderTransactionTable(); });
-                document.getElementById('export-btn').addEventListener('click', exportDataToCSV);
-                document.getElementById('add-transaction-btn').addEventListener('click', () => openModal(document.getElementById('transaction-modal'), document.getElementById('modal-content')));
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) {
+                    searchInput.value = state.searchTerm;
+                    searchInput.addEventListener('input', (e) => { state.searchTerm = e.target.value; renderTransactionTable(); });
+                }
+                
+                const exportBtn = document.getElementById('export-btn');
+                if (exportBtn) exportBtn.addEventListener('click', exportDataToCSV);
+
+                const addBtn = document.getElementById('add-transaction-btn');
+                if (addBtn) addBtn.addEventListener('click', () => openModal(document.getElementById('transaction-modal'), document.getElementById('modal-content')));
                 
                 const tbody = document.getElementById('transaction-table-body');
                 tbody.innerHTML = '';
@@ -328,6 +339,8 @@
             const renderCharts = () => {
                 const container = document.getElementById('charts-section');
                 container.innerHTML = '';
+                const chartOptions = { responsive: true, maintainAspectRatio: false };
+
                 if(state.isComparing) {
                     container.innerHTML = `
                         <div class="panel p-4 rounded-2xl">
@@ -341,21 +354,13 @@
                     
                     const dataA = { year: state.periodA.year, months: ALL_MONTHS.map((m, i) => calculateMetrics(getTransactionsForPeriod({year: state.periodA.year, month: m})))};
                     const dataB = { year: state.periodB.year, months: ALL_MONTHS.map((m, i) => calculateMetrics(getTransactionsForPeriod({year: state.periodB.year, month: m})))};
+                    
+                    if(state.charts.compProfit) state.charts.compProfit.destroy();
+                    state.charts.compProfit = new Chart(document.getElementById('comparisonProfitChart').getContext('2d'), { type: 'line', data: { labels: ALL_MONTHS, datasets: [ { label: `Laba ${dataA.year}`, data: dataA.months.map(d=>d.net), borderColor: '#4f46e5', tension: 0.1, fill: false }, { label: `Laba ${dataB.year}`, data: dataB.months.map(d=>d.net), borderColor: '#a1a1aa', tension: 0.1, fill: false, borderDash: [5, 5] } ]}, options: chartOptions });
+                    
+                    if(state.charts.compExpense) state.charts.compExpense.destroy();
+                    state.charts.compExpense = new Chart(document.getElementById('comparisonExpenseChart').getContext('2d'), { type: 'bar', data: { labels: ALL_MONTHS, datasets: [ { label: `Pengeluaran ${dataA.year}`, data: dataA.months.map(d=>d.expense), backgroundColor: 'rgba(59, 130, 246, 0.7)' }, { label: `Pengeluaran ${dataB.year}`, data: dataB.months.map(d=>d.expense), backgroundColor: 'rgba(209, 213, 219, 0.7)' } ]}, options: chartOptions });
 
-                    new Chart(document.getElementById('comparisonProfitChart').getContext('2d'), {
-                        type: 'line',
-                        data: { labels: ALL_MONTHS, datasets: [
-                            { label: `Laba ${dataA.year}`, data: dataA.months.map(d=>d.net), borderColor: '#4f46e5', tension: 0.1, fill: false },
-                            { label: `Laba ${dataB.year}`, data: dataB.months.map(d=>d.net), borderColor: '#a1a1aa', tension: 0.1, fill: false, borderDash: [5, 5] }
-                        ]}, options: { responsive: true, maintainAspectRatio: false }
-                    });
-                     new Chart(document.getElementById('comparisonExpenseChart').getContext('2d'), {
-                        type: 'bar',
-                        data: { labels: ALL_MONTHS, datasets: [
-                            { label: `Pengeluaran ${dataA.year}`, data: dataA.months.map(d=>d.expense), backgroundColor: 'rgba(59, 130, 246, 0.7)' },
-                            { label: `Pengeluaran ${dataB.year}`, data: dataB.months.map(d=>d.expense), backgroundColor: 'rgba(209, 213, 219, 0.7)' }
-                        ]}, options: { responsive: true, maintainAspectRatio: false }
-                    });
                 } else {
                      container.innerHTML = `
                         <div class="panel p-4 rounded-2xl">
@@ -367,8 +372,12 @@
                             <div class="chart-container"><canvas id="netProfitTrendChart"></canvas></div>
                         </div>`;
                     const monthlyData = ALL_MONTHS.map((m, i) => calculateMetrics(getTransactionsForPeriod({year: state.currentYear, month: m})));
-                    new Chart(document.getElementById('incomeExpenseChart').getContext('2d'), { type: 'bar', data: { labels: ALL_MONTHS, datasets: [ { label: 'Pemasukan', data: monthlyData.map(d=>d.income), backgroundColor: 'rgba(59, 130, 246, 0.7)'}, { label: 'Pengeluaran', data: monthlyData.map(d=>d.expense), backgroundColor: 'rgba(234, 179, 8, 0.7)' } ]}, options: { responsive: true, maintainAspectRatio: false } });
-                    new Chart(document.getElementById('netProfitTrendChart').getContext('2d'), { type: 'line', data: { labels: ALL_MONTHS, datasets: [{ label: 'Laba Bersih', data: monthlyData.map(d => d.net), fill: true, backgroundColor: 'rgba(79, 70, 229, 0.1)', borderColor: 'rgba(79, 70, 229, 1)', tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }} } });
+                    
+                    if(state.charts.incomeExpense) state.charts.incomeExpense.destroy();
+                    state.charts.incomeExpense = new Chart(document.getElementById('incomeExpenseChart').getContext('2d'), { type: 'bar', data: { labels: ALL_MONTHS, datasets: [ { label: 'Pemasukan', data: monthlyData.map(d=>d.income), backgroundColor: 'rgba(59, 130, 246, 0.7)'}, { label: 'Pengeluaran', data: monthlyData.map(d=>d.expense), backgroundColor: 'rgba(234, 179, 8, 0.7)' } ]}, options: chartOptions });
+                    
+                    if(state.charts.netProfit) state.charts.netProfit.destroy();
+                    state.charts.netProfit = new Chart(document.getElementById('netProfitTrendChart').getContext('2d'), { type: 'line', data: { labels: ALL_MONTHS, datasets: [{ label: 'Laba Bersih', data: monthlyData.map(d => d.net), fill: true, backgroundColor: 'rgba(79, 70, 229, 0.1)', borderColor: 'rgba(79, 70, 229, 1)', tension: 0.4 }] }, options: { ...chartOptions, plugins: { legend: { display: false }} } });
                 }
             };
 
@@ -431,30 +440,28 @@
                         </div>
                     </div>`;
                 
-                const openModal = (modal, content) => { modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10); };
-                const closeModal = (modal, content) => { modal.classList.add('opacity-0'); content.classList.add('scale-95'); setTimeout(() => modal.classList.add('hidden'), 300); };
-                
-                // Add Transaction Modal Logic
                 const transactionModal = document.getElementById('transaction-modal');
+                const transactionModalContent = document.getElementById('modal-content');
+                const confirmationModal = document.getElementById('confirmation-modal');
+                const confirmationModalContent = document.getElementById('confirmation-modal-content');
+                
                 const form = document.getElementById('transaction-form');
-                window.openTransactionModal = () => openModal(transactionModal, document.getElementById('modal-content'));
-                document.getElementById('cancel-btn').addEventListener('click', () => closeModal(transactionModal, document.getElementById('modal-content')));
+                document.getElementById('cancel-btn').addEventListener('click', () => closeModal(transactionModal, transactionModalContent));
                 form.addEventListener('submit', e => {
                     e.preventDefault();
                     state.transactions.push({ id: Date.now(), date: form.date.value, description: form.description.value, type: form.type.value, amount: parseInt(form.amount.value) });
                     saveData();
                     form.reset();
                     document.getElementById('date').valueAsDate = new Date();
-                    closeModal(transactionModal, document.getElementById('modal-content'));
+                    closeModal(transactionModal, transactionModalContent);
                     renderDashboard();
                 });
-                 // Confirmation Modal Logic
-                const confirmationModal = document.getElementById('confirmation-modal');
-                document.getElementById('cancel-delete-btn').addEventListener('click', () => closeModal(confirmationModal, document.getElementById('confirmation-modal-content')));
+
+                document.getElementById('cancel-delete-btn').addEventListener('click', () => closeModal(confirmationModal, confirmationModalContent));
                 document.getElementById('confirm-delete-btn').addEventListener('click', () => {
                     state.transactions = state.transactions.filter(t => t.id !== state.transactionIdToDelete);
                     saveData();
-                    closeModal(confirmationModal, document.getElementById('confirmation-modal-content'));
+                    closeModal(confirmationModal, confirmationModalContent);
                     renderDashboard();
                 });
             };
@@ -462,8 +469,7 @@
             window.openConfirmationModal = () => {
                 const modal = document.getElementById('confirmation-modal');
                 const content = document.getElementById('confirmation-modal-content');
-                modal.classList.remove('hidden'); 
-                setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
+                openModal(modal, content);
             };
             
             const setupToggleCompare = () => {
@@ -484,10 +490,9 @@
                 renderSummaryCards();
                 renderTransactionTable();
                 renderCharts();
-                // Animate cards on render
                 document.querySelectorAll('.card-animate').forEach((el, index) => {
                     el.style.animation = 'none';
-                    el.offsetHeight; /* trigger reflow */
+                    el.offsetHeight;
                     el.style.animation = `fadeInUp 0.5s ease-out ${index * 0.1}s forwards`;
                 });
             };
@@ -503,7 +508,7 @@
                 state.periodB.month = ALL_MONTHS[now.getMonth()];
                 
                 renderGreeting();
-                renderModals(); // Render modals once
+                renderModals();
                 setupToggleCompare();
                 
                 setTimeout(() => {
