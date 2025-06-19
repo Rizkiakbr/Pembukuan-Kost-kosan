@@ -116,9 +116,7 @@
         import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // --- PENTING: KONFIGURASI FIREBASE ANDA ---
-            // Salin objek `firebaseConfig` dari proyek Firebase Anda dan tempel di bawah ini untuk menggantikan yang contoh.
-            const firebaseConfig = {
+             const firebaseConfig = {
             apiKey: "AIzaSyDuvVv9JE0qXOsbH94XgStuLBzdDOlPaiA",
             authDomain: "dasbor-keuangan-kost.firebaseapp.com",
             projectId: "dasbor-keuangan-kost",
@@ -126,7 +124,6 @@
             messagingSenderId: "119938039054",
             appId: "1:119938039054:web:343aac05e7b0e88354eb5f"
             };
-
 
             let db, auth;
             try {
@@ -149,7 +146,7 @@
                 await signInAnonymously(auth);
             } catch (error) {
                 console.error("Authentication failed:", error);
-                document.body.innerHTML = '<p class="text-center text-red-500 p-8">Gagal melakukan autentikasi.</p>';
+                document.body.innerHTML = '<p class="text-center text-red-500 p-8">Gagal melakukan autentikasi. Pastikan login Anonymous diaktifkan di Firebase Console.</p>';
                 return;
             }
 
@@ -294,7 +291,36 @@
                 }
             };
 
-            const renderTransactionTable = () => {
+            const renderTransactionRows = () => {
+                const tbody = document.getElementById('transaction-table-body');
+                if (!tbody) return;
+
+                tbody.innerHTML = '';
+                const filtered = getFilteredTransactions().sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                if (filtered.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-zinc-500">Tidak ada transaksi yang cocok.</td></tr>`;
+                    return;
+                }
+
+                filtered.forEach((t, index) => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-zinc-200/80 opacity-0';
+                    row.style.animation = `fadeInUp 0.5s ease-out ${index * 0.05}s forwards`;
+                    row.innerHTML = `
+                        <td class="p-3">${new Date(t.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}</td>
+                        <td class="p-3">${t.description}</td>
+                        <td class="p-3 text-right font-semibold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">${t.type === 'income' ? '+' : '-'} ${formatCurrency(t.amount)}</td>
+                        <td class="p-3 text-center"><button data-id="${t.id}" class="delete-btn text-zinc-400 hover:text-red-500 p-1 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button></td>`;
+                    tbody.appendChild(row);
+                });
+
+                document.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', e => { state.transactionIdToDelete = e.currentTarget.dataset.id; openConfirmationModal(); });
+                });
+            };
+
+            const renderTransactionSection = () => {
                 const container = document.getElementById('transactions-section');
                 container.style.animationDelay = '0.5s';
                 container.classList.add('fade-in-up');
@@ -307,7 +333,7 @@
                     <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
                         <div class="w-full md:w-auto">
                             <h3 class="text-xl font-semibold text-zinc-800">Riwayat Transaksi</h3>
-                            <p class="text-sm text-zinc-500">(<span id="transaction-period-label">${state.currentMonth}, ${state.currentYear}</span>)</p>
+                            <p class="text-sm text-zinc-500">(<span id="transaction-period-label"></span>)</p>
                         </div>
                         <div class="w-full md:w-auto flex flex-col sm:flex-row gap-2">
                             <div class="relative flex-grow">
@@ -339,7 +365,10 @@
                 const searchInput = document.getElementById('search-input');
                 if (searchInput) {
                     searchInput.value = state.searchTerm;
-                    searchInput.addEventListener('input', (e) => { state.searchTerm = e.target.value; renderTransactionTable(); });
+                    searchInput.addEventListener('input', (e) => { 
+                        state.searchTerm = e.target.value; 
+                        renderTransactionRows(); 
+                    });
                 }
                 
                 const exportBtn = document.getElementById('export-btn');
@@ -348,35 +377,15 @@
                 const addBtn = document.getElementById('add-transaction-btn');
                 if (addBtn) addBtn.addEventListener('click', () => openModal(document.getElementById('transaction-modal'), document.getElementById('modal-content')));
                 
-                const tbody = document.getElementById('transaction-table-body');
-                tbody.innerHTML = '';
-                const filtered = getFilteredTransactions().sort((a, b) => new Date(b.date) - new Date(a.date));
-
-                if (filtered.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="text-center p-6 text-zinc-500">Tidak ada transaksi yang cocok.</td></tr>`;
-                    return;
-                }
-                
-                filtered.forEach((t, index) => {
-                    const row = document.createElement('tr');
-                    row.className = 'border-b border-zinc-200/80 opacity-0';
-                    row.style.animation = `fadeInUp 0.5s ease-out ${index * 0.05}s forwards`;
-                    row.innerHTML = `
-                        <td class="p-3">${new Date(t.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}</td>
-                        <td class="p-3">${t.description}</td>
-                        <td class="p-3 text-right font-semibold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">${t.type === 'income' ? '+' : '-'} ${formatCurrency(t.amount)}</td>
-                        <td class="p-3 text-center"><button data-id="${t.id}" class="delete-btn text-zinc-400 hover:text-red-500 p-1 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button></td>`;
-                    tbody.appendChild(row);
-                });
-
-                document.querySelectorAll('.delete-btn').forEach(button => {
-                    button.addEventListener('click', e => { state.transactionIdToDelete = e.currentTarget.dataset.id; openConfirmationModal(); });
-                });
+                document.getElementById('transaction-period-label').textContent = `${state.currentMonth}, ${state.currentYear}`;
+                renderTransactionRows();
             };
 
             const renderCharts = () => {
                 const container = document.getElementById('charts-section');
                 container.innerHTML = '';
+                container.style.animationDelay = '0.4s';
+                container.classList.add('fade-in-up');
                 const chartOptions = { responsive: true, maintainAspectRatio: false };
 
                 if(state.isComparing) {
@@ -528,7 +537,7 @@
             const renderDashboard = () => {
                 setupFilters();
                 renderSummaryCards();
-                renderTransactionTable();
+                renderTransactionSection();
                 renderCharts();
                 document.querySelectorAll('.card-animate').forEach((el, index) => {
                     el.style.animation = 'none';
