@@ -17,6 +17,7 @@
         - Confirmation Modal (Interaction): Modal konfirmasi kustom ditambahkan sebelum menghapus data untuk mencegah kesalahan pengguna.
         - Comparison Mode (Interaction): Fitur perbandingan ditambahkan dengan UI khusus untuk memilih dua periode, memberikan kemampuan analisis YoY dan MoM.
         - Animations: Animasi 'fade-in' dan 'typing' dipertahankan untuk memberikan kesan premium.
+        - Data Storage: Logic is refactored from localStorage to Firebase Firestore for real-time collaboration.
         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
     -->
     <style>
@@ -52,7 +53,7 @@
     <div id="app" class="container mx-auto p-4 md:p-6">
         
         <header class="text-center mb-8 pt-8">
-            <h1 class="text-3xl md:text-4xl font-extrabold text-zinc-900">Dasbor Keuangan</h1>
+            <h1 class="text-3xl md:text-4xl font-extrabold text-zinc-900">Dasbor Keuangan Anda</h1>
             <p id="greeting" class="text-lg h-7 mt-2 text-indigo-700 font-medium">Memuat...</p>
         </header>
 
@@ -109,9 +110,51 @@
     <!-- Modals -->
     <div id="modal-container"></div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const STORAGE_KEY = 'kostFinanceData_v13_fixed';
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // --- PENTING: KONFIGURASI FIREBASE ANDA ---
+            // Salin objek `firebaseConfig` dari proyek Firebase Anda dan tempel di bawah ini untuk menggantikan yang contoh.
+            const firebaseConfig = {
+            apiKey: "AIzaSyDuvVv9JE0qXOsbH94XgStuLBzdDOlPaiA",
+            authDomain: "dasbor-keuangan-kost.firebaseapp.com",
+            projectId: "dasbor-keuangan-kost",
+            storageBucket: "dasbor-keuangan-kost.firebasestorage.app",
+            messagingSenderId: "119938039054",
+            appId: "1:119938039054:web:343aac05e7b0e88354eb5f"
+            };
+
+
+            let db, auth;
+            try {
+                if (firebaseConfig.apiKey.startsWith("GANTI_DENGAN")) {
+                    throw new Error("Konfigurasi Firebase belum diisi.");
+                }
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+            } catch (e) {
+                console.error("Error initializing Firebase:", e);
+                document.body.innerHTML = `<div class="text-center p-8 bg-red-100 border border-red-400 text-red-700 rounded-lg max-w-2xl mx-auto mt-10">
+                    <h2 class="font-bold text-xl mb-2">Gagal Menginisialisasi Database</h2>
+                    <p>Pastikan Anda sudah mengisi variabel <strong>firebaseConfig</strong> di dalam file HTML dengan konfigurasi dari proyek Firebase Anda.</p>
+                </div>`;
+                return;
+            }
+
+            try {
+                await signInAnonymously(auth);
+            } catch (error) {
+                console.error("Authentication failed:", error);
+                document.body.innerHTML = '<p class="text-center text-red-500 p-8">Gagal melakukan autentikasi.</p>';
+                return;
+            }
+
+            const transactionCollectionRef = collection(db, "transactions");
+
             const state = { 
                 transactions: [], 
                 currentYear: new Date().getFullYear(),
@@ -126,16 +169,11 @@
             
             const ALL_MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
-            const saveData = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state.transactions));
-            const loadData = () => JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
             const formatCurrency = value => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value);
             
             const openModal = (modal, content) => {
                 modal.classList.remove('hidden');
-                setTimeout(() => {
-                    modal.classList.remove('opacity-0');
-                    content.classList.remove('scale-95');
-                }, 10);
+                setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
             };
             
             const closeModal = (modal, content) => {
@@ -332,7 +370,7 @@
                 });
 
                 document.querySelectorAll('.delete-btn').forEach(button => {
-                    button.addEventListener('click', e => { state.transactionIdToDelete = parseInt(e.currentTarget.dataset.id); openConfirmationModal(); });
+                    button.addEventListener('click', e => { state.transactionIdToDelete = e.currentTarget.dataset.id; openConfirmationModal(); });
                 });
             };
 
@@ -447,22 +485,24 @@
                 
                 const form = document.getElementById('transaction-form');
                 document.getElementById('cancel-btn').addEventListener('click', () => closeModal(transactionModal, transactionModalContent));
-                form.addEventListener('submit', e => {
+                form.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    state.transactions.push({ id: Date.now(), date: form.date.value, description: form.description.value, type: form.type.value, amount: parseInt(form.amount.value) });
-                    saveData();
+                    const newTransaction = { 
+                        date: form.date.value, 
+                        description: form.description.value, 
+                        type: form.type.value, 
+                        amount: parseInt(form.amount.value) 
+                    };
+                    await addDoc(transactionCollectionRef, newTransaction);
                     form.reset();
                     document.getElementById('date').valueAsDate = new Date();
                     closeModal(transactionModal, transactionModalContent);
-                    renderDashboard();
                 });
 
                 document.getElementById('cancel-delete-btn').addEventListener('click', () => closeModal(confirmationModal, confirmationModalContent));
-                document.getElementById('confirm-delete-btn').addEventListener('click', () => {
-                    state.transactions = state.transactions.filter(t => t.id !== state.transactionIdToDelete);
-                    saveData();
+                document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+                    await deleteDoc(doc(db, "transactions", state.transactionIdToDelete));
                     closeModal(confirmationModal, confirmationModalContent);
-                    renderDashboard();
                 });
             };
 
@@ -498,7 +538,6 @@
             };
 
             const init = () => {
-                state.transactions = loadData();
                 const now = new Date();
                 state.currentYear = now.getFullYear();
                 state.currentMonth = ALL_MONTHS[now.getMonth()];
@@ -511,10 +550,11 @@
                 renderModals();
                 setupToggleCompare();
                 
-                setTimeout(() => {
+                onSnapshot(transactionCollectionRef, (snapshot) => {
+                    state.transactions = snapshot.docs.map(doc => ({...doc.data(), id: doc.id}));
                     document.querySelector('main').classList.remove('opacity-0');
                     renderDashboard();
-                }, 100);
+                });
             };
 
             init();
